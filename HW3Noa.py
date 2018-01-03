@@ -50,8 +50,8 @@ def normalize_text(text):
 #clean a tweet
 
 def cleanData(text):
-    print(text)
-    print("******************************")
+    #print(text)
+    #print("******************************")
     text = text.lower()
 
     # remove punctuation that is not word-internal (e.g., hyphens, apostrophes)
@@ -93,4 +93,19 @@ def getCommonMedTerms (cleanTextsPerTerms):
     commonTermsInCorpus = [term for term, word_count in Counter(allTerms).most_common(20)]
 
 
-    #get the most frequent term to each gender
+    #get the tweet foreach gender
+twitsPerGender ={};
+twitsPerGender['male'] = [];
+twitsPerGender['female'] = [];
+twitsPerGender['unknown'] = [];
+twitsPerGender['brand'] = [];
+for index, row in twitterDataSet.iterrows():
+    twitsPerGender[row['gender']].append(row['text_norm'])
+#count the twits in each category
+print("Class Distribution:")
+print("***************************************************")
+for key, value in twitsPerGender.iteritems():
+    print('{}: {}'.format(key,len(value)))
+    #print (len(value))
+
+
