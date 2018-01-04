@@ -25,8 +25,6 @@ import re
 from collections import Counter
 import itertools
 from sets import Set
-# function for encoding categories
-from sklearn.preprocessing import LabelEncoder
 # function to split the data for cross-validation
 from sklearn.model_selection import train_test_split
 from time import time
@@ -170,12 +168,20 @@ print (commSet)
 
 # Q2
 
-#this function recieve: clf-the chosen classifier, X (the texts) and Y (the labels)
-#split to train and test using cross-validation
+#remove all rows in dataset that have Nan value in "gender:confidence" column
+gender_confidence = twitterDataSet['gender:confidence'][np.where(np.invert(np.isnan(twitterDataSet['gender:confidence'])))[0]]
+twitterDataSet_confident = twitterDataSet[twitterDataSet['gender:confidence']==1]
+
+textsAfterClean = twitterDataSet_confident['text_norm']
+genders = twitterDataSet_confident['gender']
+
+# split into train and test sets using cross validation
+x_train, x_test, y_train, y_test = train_test_split(textsAfterClean, genders, test_size=0.2)
+
+
+#this function recieve: clf-the chosen classifier, x_train and x_test- BOW/TF-IDF matrix (from feature extraction)
 #then train the model clf and return the results
-def benchmark(clf, X, Y):
-    # split into train and test sets
-    x_train, x_test, y_train, y_test = train_test_split(X, Y, test_size=0.2)
+def benchmark(clf, x_train, x_test):
 
     print('_' * 80)
     print("Training: ")
@@ -193,7 +199,6 @@ def benchmark(clf, X, Y):
     score = metrics.accuracy_score(y_test, pred)
     print("accuracy:   %0.3f" % score)
 
-    print()
     clf_descr = str(clf).split('(')[0]
     return clf_descr, score, train_time, test_time
 
@@ -223,23 +228,15 @@ def makePlot (results):
         plt.text(-.3, i, c)
     plt.show()
 
-#remove all rows in dataset that have Nan value in "gender:confidence" column
-gender_confidence = twitterDataSet['gender:confidence'][np.where(np.invert(np.isnan(twitterDataSet['gender:confidence'])))[0]]
-twitterDataSet_confident = twitterDataSet[twitterDataSet['gender:confidence']==1]
-
-textsAfterClean = twitterDataSet_confident['text_norm']
-genders = twitterDataSet_confident['gender']
 
 #feature extraction
-Tfidf_vectorizer = TfidfVectorizer(sublinear_tf=True, max_df=0.5, stop_words='english')
-Tfidf_X = Tfidf_vectorizer.fit_transform(textsAfterClean) #calculate TF-IDF of terms in documents
-encoder = LabelEncoder()
-Tfidf_Y = encoder.fit_transform(genders)
-
 vectorizer = CountVectorizer()
-BOW_X = vectorizer.fit_transform(textsAfterClean)
-encoder = LabelEncoder()
-BOW_Y = encoder.fit_transform(genders)
+BOW_train = vectorizer.fit_transform(x_train)
+BOW_test = vectorizer.transform(x_test)
+
+Tfidf_vectorizer = TfidfVectorizer(sublinear_tf=True, max_df=0.5, stop_words='english')
+Tfidf_train = Tfidf_vectorizer.fit_transform(x_train)
+Tfidf_test = Tfidf_vectorizer.transform(x_test)
 
 ### Results of the classify using Bag of words feature extraction:
 results_BOW = []
@@ -248,7 +245,7 @@ for clf, name in (
         (MultinomialNB(),"Naive Bayes")):
     print('=' * 80)
     print(name)
-    results_BOW.append(benchmark(clf, BOW_X,BOW_Y))
+    results_BOW.append(benchmark(clf, BOW_train,BOW_test))
 makePlot(results_BOW)
 
 ### Results of the classify using TF-IDF feature extraction:
@@ -258,6 +255,92 @@ for clf, name in (
         (MultinomialNB(),"Naive Bayes")):
     print('=' * 80)
     print(name)
-    results_Tfidf.append(benchmark(clf, Tfidf_X,Tfidf_Y))
+    results_Tfidf.append(benchmark(clf, Tfidf_train,Tfidf_test))
 makePlot(results_Tfidf)
 
+### Tune each model parameters to optimize the results using pipeline
+svmResults  = []
+NBResults = []
+
+#### find the best parameters for both the feature extraction-BOW and the classifier-Naive Bayes:
+
+nb_clf1 = Pipeline([('vect', CountVectorizer()),('clf', MultinomialNB())])
+parameters_clf1 =  {
+    'vect__max_df': (0.3,0.5,1.0),
+    'clf__alpha': (0.01,1.0),
+    'clf__fit_prior':(False,True)}
+gs_clf1 = GridSearchCV(nb_clf1, parameters_clf1, n_jobs=1)
+gs_clf1 = gs_clf1.fit(x_train,y_train)
+print('Best score: ',gs_clf1.best_score_)
+NBResults.append(gs_clf1.best_score_)
+print('Best params: ',gs_clf1.best_params_)
+
+#### find the best parameters for both the feature extraction-Tf idf and the classifier-Naive Bayes:
+nb_clf2 = Pipeline([('vect', TfidfVectorizer()),('clf', MultinomialNB())])
+parameters_clf2 =  {
+    'vect__max_df': (0.3,0.5,1.0),
+    'vect__sublinear_tf':(True, False),
+    'clf__alpha': (0.01,1.0),
+    'clf__fit_prior':(False,True)}
+gs_clf2 = GridSearchCV(nb_clf2, parameters_clf2, n_jobs=1)
+gs_clf2 = gs_clf2.fit(x_train,y_train)
+NBResults.append(gs_clf2.best_score_)
+print('Best score: ',gs_clf2.best_score_)
+print('Best params: ',gs_clf2.best_params_)
+
+#### find the best parameters for both the feature extraction-BOW and the classifier-SVM:
+svm_clf3 = Pipeline([
+    ('vect', CountVectorizer()),
+    ('clf', SGDClassifier()),
+])
+parameters_clf3 = {
+    'vect__max_df': (0.3,0.5,1.0),
+    'clf__alpha': (0.001,0.0001,0.00001,0.000001),
+    'clf__penalty': ('elasticnet','none', 'l2','l1'),
+    'clf__epsilon':(0.1,0.2)}
+gs_clf3 = GridSearchCV(svm_clf3, parameters_clf3, n_jobs=1)
+gs_clf3 = gs_clf3.fit(x_train,y_train)
+svmResults.append(gs_clf3.best_score_);
+print('Best score: ',gs_clf3.best_score_)
+print('Best params: ',gs_clf3.best_params_)
+
+#### find the best parameters for both the feature extraction-Tf idf and the classifier-SVM:
+svm_clf4 = Pipeline([
+    ('vect', TfidfVectorizer()),
+    ('clf', SGDClassifier()),
+])
+parameters_clf4 = {
+    'vect__max_df': (0.3,0.5,1.0),
+    'vect__sublinear_tf':(True, False),
+    'clf__alpha': (0.001,0.0001,0.00001,0.000001),
+    'clf__penalty': ('elasticnet','none', 'l2','l1'),
+    'clf__epsilon':(0.1,0.2)}
+gs_clf4 = GridSearchCV(svm_clf4, parameters_clf4, n_jobs=1)
+gs_clf4 = gs_clf4.fit(x_train,y_train)
+svmResults.append(gs_clf4.best_score_);
+print('Best score: ',gs_clf4.best_score_)
+print('Best params: ',gs_clf4.best_params_)
+
+### Use the best models selected in the previous steps for prediction on the test set and present the accuracy for each machine learning model
+
+#### Results of  the model Naive Bayes (with the receive pipeline's parameters):
+#Naive Bayes best with Bag of word
+#Best params:  {'vect__max_df': 0.5, 'clf__fit_prior': True, 'clf__alpha': 1.0}
+count_vectorizer1 = CountVectorizer(max_df=0.5, stop_words='english')
+count_train1 = count_vectorizer1.fit_transform(x_train)
+count_test1 = count_vectorizer1.transform(x_test)
+results1 = []
+clf_nb=MultinomialNB(fit_prior=True,alpha=1.0)
+print("Naive Bayes BOW")
+results1.append(benchmark(clf_nb, count_train1,count_test1))
+
+#### Results of  the model SVM (with the receive pipeline's parameters):
+#SVM best with Bag of word
+#Best params: {'vect__max_df': 0.5, 'clf__penalty': 'l2', 'clf__epsilon': 0.1, 'clf__alpha': 0.001}
+count_vectorizer1 = CountVectorizer(max_df=0.5, stop_words='english')
+count_train2 = count_vectorizer1.fit_transform(x_train)
+count_test2 = count_vectorizer1.transform(x_test)
+results2 = []
+clf_svm=SGDClassifier(penalty='l2', alpha=0.001, epsilon=0.1)
+print("SVM BOW")
+results2.append(benchmark(clf_svm, count_train2,count_test2))
