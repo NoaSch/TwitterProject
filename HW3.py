@@ -345,3 +345,13 @@ clf_svm=SGDClassifier(penalty='l2', alpha=0.001, epsilon=0.1)
 print("SVM BOW")
 results2.append(benchmark(clf_svm, count_train2,count_test2))
 
+import numpy
+import os
+os.environ["KERAS_BACKEND"] = "theano"
+from keras.models import Sequential
+from keras.layers import Dense
+from keras.layers import LSTM
+from keras.layers.embeddings import Embedding
+from keras.preprocessing import sequence
+# fix random seed for reproducibility
+numpy.random.seed(7)
