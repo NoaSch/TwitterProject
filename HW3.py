@@ -344,3 +344,4 @@ results2 = []
 clf_svm=SGDClassifier(penalty='l2', alpha=0.001, epsilon=0.1)
 print("SVM BOW")
 results2.append(benchmark(clf_svm, count_train2,count_test2))
+
