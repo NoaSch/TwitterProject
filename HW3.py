@@ -159,7 +159,7 @@ print (df2)
 plt.show()
 
 print("")
-print("Tthe terms that are common in all categories:")
+print("The terms that are common in all categories:")
 print("***************************************************")
 print (commSet)
 
@@ -258,6 +258,7 @@ for clf, name in (
     results_Tfidf.append(benchmark(clf, Tfidf_train,Tfidf_test))
 makePlot(results_Tfidf)
 
+
 ### Tune each model parameters to optimize the results using pipeline
 svmResults  = []
 NBResults = []
@@ -344,6 +345,7 @@ results2 = []
 clf_svm=SGDClassifier(penalty='l2', alpha=0.001, epsilon=0.1)
 print("SVM BOW")
 results2.append(benchmark(clf_svm, count_train2,count_test2))
+
 
 import numpy
 import os
