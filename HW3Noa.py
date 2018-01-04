@@ -38,12 +38,16 @@ def cleanData(text):
     #print("******************************")
     text = text.lower()
 
-    # remove punctuation that is not word-internal
-    text = re.sub('\s\W', ' ', text)
-    text = re.sub('\W\s', ' ', text)
-
-    # remove  any double spaces
-    text = re.sub('\s+', ' ', text)
+    # remove punctuation, spaces digits and "https"
+    text = re.sub('\s\W',' ',text)
+    text = re.sub('\W,\s',' ',text)
+    text = re.sub(r'[^\w]', ' ', text)
+    text = re.sub("\d+", "", text)
+    text = re.sub('\s+',' ',text)
+    text = re.sub('[!@#$_]', '', text)
+    text = text.replace("https","")
+    text = text.replace(",","")
+    text = text.replace("[\w*"," ")
 
     stop_words = stopwords.words('english') + list(string.punctuation)
     stemmer = SnowballStemmer("english")
@@ -58,7 +62,10 @@ def cleanData(text):
 twitterDataSet['text_norm'] = [cleanData(s) for s in twitterDataSet['text']]
 #twitterDataSet['description_norm'] = [cleanData(s) for s in twitterDataSet['description']]
 
-
+print("Class Distribution:")
+print("***************************************************")
+print(twitterDataSet.gender.value_counts())
+print("")
 
 #termsPerCat = {} #dictionary of all categories and for each one- list of all terms (after cleaning) in category
 
@@ -86,10 +93,10 @@ for index, row in twitterDataSet.iterrows(): # iterate each row
     #twitsPerGender[row['gender']].append(row['text_norm']) #if we want that twit will save as string not list
     twitsPerGender[row['gender']].append(row['text_norm'].split())
 #count the twits in each category
-print("Class Distribution:")
-print("***************************************************")
-for key, value in twitsPerGender.iteritems():
-    print('{}: {} twits'.format(key,len(value)))
+#print("Class Distribution:")
+#print("***************************************************")
+#for key, value in twitsPerGender.iteritems():
+    #print('{}: {} twits'.format(key,len(value)))
 commonWords = [];
 ##get the terms distribution
 table_of_most_frequent = {};# array of tuples - term and requenchy
