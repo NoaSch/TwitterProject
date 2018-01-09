@@ -347,9 +347,10 @@ print("SVM BOW")
 results2.append(benchmark(clf_svm, count_train2,count_test2))
 
 
-import numpy
+
 import os
 os.environ["KERAS_BACKEND"] = "theano"
+import numpy
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import LSTM
