@@ -504,5 +504,22 @@ with open('nbaCarTweets1000.json', 'r') as f: #read this file
 twitterStreamingDataSet['text_norm'] = [cleanData(s) for s in twitterStreamingDataSet['text']]
 twitterStreamingDataSet['description_norm'] = [cleanData(s) for s in twitterStreamingDataSet['description']]
 
+#return the top 30 most frequent terms in the new datast
+def getCommonTerms():
+    allTermsList = []
+    allTweets = twitterStreamingDataSet['text_norm']
+    for tweet in allTweets:
+        tweetTermsList = tweet.split()
+        for term in tweetTermsList:
+            allTermsList.append(term)
+    #make list of all terms (transfer list of lists to one list)
+    termsCounter = Counter(allTermsList)
+    return (termsCounter.most_common(30))
 
-print ("done")
+#print top 30 most frequent terms
+df4 = pd.DataFrame(getCommonTerms(), columns = ['Term', 'Count'])
+print()
+print("***************************************************")
+print("Top 30 most frequent terms in the new Dataset:")
+print("***************************************************")
+print (df4)
