@@ -54,12 +54,12 @@ twitterDataSet = pd.read_csv("c:\corpus\gender-classifier-DFE-791531.csv", encod
 
 def cleanData(text):
     str = ""
-    print("in data")
+    #print("in data")
     if(pd.isnull(text)):
-        print("not text")
+        #print("not text")
         return str
 
-    print(text)
+    #print(text)
     #print("******************************")
     text = text.lower()
 
@@ -404,7 +404,7 @@ class MyListener(StreamListener):
 
     def on_data(self, data):
         try:
-            with open('tweets.json', 'a') as f:
+            with open('nbaCarTweets.json', 'a') as f:
                 f.write(data)
                 return True
         except BaseException as e:
@@ -415,9 +415,9 @@ class MyListener(StreamListener):
         print(status)
         return True
 
-
+#strem tweets with #Car #nba - ecpected most male writers
 twitter_stream = Stream(auth, MyListener())
-twitter_stream.filter(track=['#SHOOPING'])
+twitter_stream.filter(track=['#nba','#car'])
 '''
 
 
@@ -430,7 +430,7 @@ punctuation = list(string.punctuation)
 stop = stopwords.words('english') + punctuation + ['rt', 'via', 'the', u'\u2019', u'\u2026', 'The', u'de', u'\xe9']
 
 import re
-
+#clean emotions
 emoticons_str = r"""
     (?:
         [:=;] # Eyes
@@ -454,11 +454,11 @@ regex_str = [
 tokens_re = re.compile(r'(' + '|'.join(regex_str) + ')', re.VERBOSE | re.IGNORECASE)
 emoticon_re = re.compile(r'^' + emoticons_str + '$', re.VERBOSE | re.IGNORECASE)
 
-
+#tokenize function
 def tokenize(s):
     return tokens_re.findall(s.encode('ascii', 'ignore'))
 
-
+#First PreProcessing
 def preprocess(s, lowercase=False):
     tokens = tokenize(s)
     if lowercase:
@@ -473,11 +473,9 @@ twitterStreamingDataSet = {}
 #counter =0
 twitterStreamingDataSet['text'] = []
 twitterStreamingDataSet['description'] = []
-with open('shoppingCarTweets1000.json', 'r') as f: #read this file
+with open('nbaCarTweets1000.json', 'r') as f: #read this file
     while True:
         line = f.readline()  # read the next line
-        #counter = counter +1
-        #print (counter)
         if not line: break
         tweet = json.loads(line)  # load it as Python dict
         #get the text of the tweet
