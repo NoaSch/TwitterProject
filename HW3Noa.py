@@ -154,3 +154,5 @@ print (df2)
 print("")
 print("the terms that are common in all categories")
 print (commSet)
+
+

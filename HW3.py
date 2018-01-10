@@ -518,7 +518,7 @@ def getCommonTerms():
 
 #print top 30 most frequent terms
 df4 = pd.DataFrame(getCommonTerms(), columns = ['Term', 'Count'])
-print()
+print("")
 print("***************************************************")
 print("Top 30 most frequent terms in the new Dataset:")
 print("***************************************************")
