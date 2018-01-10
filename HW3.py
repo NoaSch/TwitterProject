@@ -10,7 +10,7 @@ from keras.preprocessing import sequence
 #numpy.random.seed(7)'''
 
 
-
+import math
 import matplotlib.pyplot as plt
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
@@ -53,7 +53,13 @@ twitterDataSet = pd.read_csv("c:\corpus\gender-classifier-DFE-791531.csv", encod
 #clean a tweet
 
 def cleanData(text):
-    #print(text)
+    str = ""
+    print("in data")
+    if(pd.isnull(text)):
+        print("not text")
+        return str
+
+    print(text)
     #print("******************************")
     text = text.lower()
 
@@ -79,7 +85,8 @@ def cleanData(text):
 
 #update the corpus with the clean twits
 twitterDataSet['text_norm'] = [cleanData(s) for s in twitterDataSet['text']]
-#twitterDataSet['description_norm'] = [cleanData(s) for s in twitterDataSet['description']]
+
+twitterDataSet['description_norm'] = [cleanData(s) for s in twitterDataSet['description']]
 
 print("Class Distribution:")
 print("***************************************************")
